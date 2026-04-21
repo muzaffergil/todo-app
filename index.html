@@ -447,10 +447,8 @@
 
     try {
       if (isRegister) {
-        await supabase('POST', '/auth/v1/signup', {
-          email, password,
-          options: { emailRedirectTo: 'https://muzaffergil.github.io/todo-app/' }
-        });
+        const redirectTo = encodeURIComponent('https://muzaffergil.github.io/todo-app/');
+        await supabase('POST', `/auth/v1/signup?redirect_to=${redirectTo}`, { email, password });
         document.getElementById('authForm').style.display = 'none';
         document.getElementById('authSwitchText').style.display = 'none';
         document.getElementById('noticeBox').innerHTML = `
@@ -500,29 +498,51 @@
     loadTodos();
   }
 
-  /* ── handle confirmation redirect (hash tokens) ── */
+  /* ── handle confirmation redirect ── */
   async function handleRedirect() {
+    // Supabase sends tokens in the URL hash after email confirmation
     const hash = window.location.hash;
-    if (!hash) return false;
-    const params = new URLSearchParams(hash.replace(/^#/, ''));
-    const accessToken = params.get('access_token');
-    const refreshToken = params.get('refresh_token');
-    const type = params.get('type');
-    if (!accessToken) return false;
+    const query = window.location.search;
 
-    window.history.replaceState(null, '', window.location.pathname);
+    let accessToken, refreshToken, type, errorDesc;
 
-    if (type === 'signup' || type === 'recovery' || type === 'magiclink') {
-      const s = { access_token: accessToken, refresh_token: refreshToken, user: null };
-      try {
-        const user = await supabase('GET', '/auth/v1/user', null, accessToken);
-        s.user = user;
-      } catch {}
-      saveSession(s);
-      showApp(s);
+    if (hash && hash.length > 1) {
+      const p = new URLSearchParams(hash.replace(/^#/, ''));
+      accessToken = p.get('access_token');
+      refreshToken = p.get('refresh_token');
+      type = p.get('type');
+      errorDesc = p.get('error_description');
+    }
+
+    // Also check query params (some Supabase flows)
+    if (!accessToken && query) {
+      const p = new URLSearchParams(query);
+      accessToken = p.get('access_token');
+      refreshToken = p.get('refresh_token');
+      type = p.get('type');
+      errorDesc = p.get('error_description');
+    }
+
+    // Clear URL
+    if (hash || query) {
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+
+    if (errorDesc) {
+      showAuthError(decodeURIComponent(errorDesc));
       return true;
     }
-    return false;
+
+    if (!accessToken) return false;
+
+    const s = { access_token: accessToken, refresh_token: refreshToken, user: null };
+    try {
+      const user = await supabase('GET', '/auth/v1/user', null, accessToken);
+      s.user = user;
+    } catch {}
+    saveSession(s);
+    showApp(s);
+    return true;
   }
 
   /* ── todos API ── */
