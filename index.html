@@ -26,14 +26,130 @@
       overflow: hidden;
     }
 
+    /* ── AUTH ── */
+    .auth-box {
+      padding: 36px 32px;
+    }
+
+    .auth-box h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 6px;
+    }
+
+    .auth-box p.subtitle {
+      font-size: 13px;
+      color: #6b7280;
+      margin-bottom: 28px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: #374151;
+      margin-bottom: 6px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus { border-color: #4f46e5; }
+
+    .btn-primary {
+      width: 100%;
+      background: #4f46e5;
+      color: #fff;
+      border: none;
+      padding: 11px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-top: 8px;
+    }
+
+    .btn-primary:hover { background: #4338ca; }
+    .btn-primary:disabled { background: #a5b4fc; cursor: not-allowed; }
+
+    .auth-switch {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 13px;
+      color: #6b7280;
+    }
+
+    .auth-switch a {
+      color: #4f46e5;
+      cursor: pointer;
+      font-weight: 500;
+      text-decoration: none;
+    }
+
+    .auth-switch a:hover { text-decoration: underline; }
+
+    .notice {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1d4ed8;
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-size: 13px;
+      line-height: 1.6;
+      margin-top: 8px;
+    }
+
+    .error-msg {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #dc2626;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    /* ── APP ── */
+    .app-box { display: none; }
+
     .header {
       background: #4f46e5;
       color: #fff;
-      padding: 24px;
+      padding: 20px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
-    .header h1 { font-size: 22px; font-weight: 600; }
-    .header p { font-size: 13px; opacity: 0.75; margin-top: 4px; }
+    .header-left h1 { font-size: 20px; font-weight: 600; }
+    .header-left p { font-size: 12px; opacity: 0.7; margin-top: 2px; }
+
+    .logout-btn {
+      background: rgba(255,255,255,0.15);
+      border: none;
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .logout-btn:hover { background: rgba(255,255,255,0.25); }
 
     .input-area {
       display: flex;
@@ -69,6 +185,14 @@
 
     .input-area button:hover { background: #4338ca; }
     .input-area button:disabled { background: #a5b4fc; cursor: not-allowed; }
+
+    .error-bar {
+      background: #fef2f2;
+      color: #dc2626;
+      font-size: 12px;
+      padding: 8px 20px;
+      display: none;
+    }
 
     .filters {
       display: flex;
@@ -156,7 +280,7 @@
       color: #111827;
     }
 
-    .footer {
+    .app-footer {
       padding: 12px 20px;
       font-size: 12px;
       color: #9ca3af;
@@ -176,34 +300,53 @@
 
     .clear-btn:hover { color: #ef4444; }
 
-    .empty {
+    .empty, .loading {
       text-align: center;
       padding: 32px;
       color: #d1d5db;
       font-size: 14px;
     }
 
-    .loading {
-      text-align: center;
-      padding: 32px;
-      color: #9ca3af;
-      font-size: 13px;
-    }
-
-    .error-bar {
-      background: #fef2f2;
-      color: #dc2626;
-      font-size: 12px;
-      padding: 8px 20px;
-      display: none;
-    }
+    .loading { color: #9ca3af; }
   </style>
 </head>
 <body>
-  <div class="container">
+<div class="container">
+
+  <!-- AUTH -->
+  <div class="auth-box" id="authBox">
+    <h1 id="authTitle">Giriş Yap</h1>
+    <p class="subtitle" id="authSubtitle">Yapılacaklar listene devam et</p>
+
+    <div class="error-msg" id="authError"></div>
+    <div id="noticeBox"></div>
+
+    <div id="authForm">
+      <div class="form-group">
+        <label>E-posta</label>
+        <input type="email" id="authEmail" placeholder="ornek@email.com" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label>Şifre</label>
+        <input type="password" id="authPassword" placeholder="En az 6 karakter" autocomplete="current-password">
+      </div>
+      <button class="btn-primary" id="authSubmit" onclick="submitAuth()">Giriş Yap</button>
+    </div>
+
+    <div class="auth-switch">
+      <span id="authSwitchText">Hesabın yok mu?</span>
+      <a onclick="toggleMode()">Kayıt Ol</a>
+    </div>
+  </div>
+
+  <!-- APP -->
+  <div class="app-box" id="appBox">
     <div class="header">
-      <h1>Yapılacaklar</h1>
-      <p id="date"></p>
+      <div class="header-left">
+        <h1>Yapılacaklar</h1>
+        <p id="userEmail"></p>
+      </div>
+      <button class="logout-btn" onclick="logout()">Çıkış</button>
     </div>
 
     <div class="input-area">
@@ -221,197 +364,364 @@
 
     <ul class="todo-list" id="todoList"><li class="loading">Yükleniyor...</li></ul>
 
-    <div class="footer">
+    <div class="app-footer">
       <span id="remaining"></span>
       <button class="clear-btn" onclick="clearDone()">Tamamlananları sil</button>
     </div>
   </div>
 
-  <script>
-    const SUPABASE_URL = 'https://ucpnijiudrqzlrsoynem.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVjcG5paml1ZHJxemxyc295bmVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3NjEyNjQsImV4cCI6MjA5MjMzNzI2NH0.MwlCQtLROebBJOySQkQu44PhWfsnDMrn_5TLpSG4UD8';
-    const API = `${SUPABASE_URL}/rest/v1/todos`;
-    const HEADERS = {
+</div>
+
+<script>
+  const SUPABASE_URL = 'https://ucpnijiudrqzlrsoynem.supabase.co';
+  const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVjcG5paml1ZHJxemxyc295bmVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3NjEyNjQsImV4cCI6MjA5MjMzNzI2NH0.MwlCQtLROebBJOySQkQu44PhWfsnDMrn_5TLpSG4UD8';
+
+  let session = null;
+  let todos = [];
+  let filter = 'all';
+  let isRegister = false;
+
+  /* ── helpers ── */
+  function authHeaders(token) {
+    return {
       'Content-Type': 'application/json',
-      'apikey': SUPABASE_ANON_KEY,
-      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-      'Prefer': 'return=representation'
+      'apikey': ANON_KEY,
+      'Authorization': `Bearer ${token}`
     };
+  }
 
-    let todos = [];
-    let filter = 'all';
-
-    document.getElementById('date').textContent = new Date().toLocaleDateString('tr-TR', {
-      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+  async function supabase(method, path, body, token) {
+    const res = await fetch(`${SUPABASE_URL}${path}`, {
+      method,
+      headers: {
+        ...authHeaders(token || ANON_KEY),
+        'Prefer': 'return=representation'
+      },
+      body: body ? JSON.stringify(body) : null
     });
+    const text = await res.text();
+    const data = text ? JSON.parse(text) : null;
+    if (!res.ok) throw new Error(data?.error_description || data?.message || data?.msg || res.status);
+    return data;
+  }
 
-    document.getElementById('todoInput').addEventListener('keydown', e => {
-      if (e.key === 'Enter') addTodo();
-    });
+  /* ── session persistence ── */
+  function saveSession(s) {
+    session = s;
+    if (s) localStorage.setItem('sb_session', JSON.stringify(s));
+    else localStorage.removeItem('sb_session');
+  }
 
-    function showError(msg) {
-      const bar = document.getElementById('errorBar');
-      bar.textContent = msg;
-      bar.style.display = 'block';
-      setTimeout(() => bar.style.display = 'none', 4000);
-    }
+  function loadSession() {
+    try { return JSON.parse(localStorage.getItem('sb_session')); } catch { return null; }
+  }
 
-    async function api(method, path = '', body = null, extraHeaders = {}) {
-      const res = await fetch(API + path, {
-        method,
-        headers: { ...HEADERS, ...extraHeaders },
-        body: body ? JSON.stringify(body) : null
-      });
-      if (!res.ok) {
-        const err = await res.text();
-        throw new Error(err);
-      }
-      const text = await res.text();
-      return text ? JSON.parse(text) : null;
-    }
+  /* ── auth ── */
+  function toggleMode() {
+    isRegister = !isRegister;
+    document.getElementById('authTitle').textContent = isRegister ? 'Kayıt Ol' : 'Giriş Yap';
+    document.getElementById('authSubtitle').textContent = isRegister
+      ? 'Yeni bir hesap oluştur' : 'Yapılacaklar listene devam et';
+    document.getElementById('authSubmit').textContent = isRegister ? 'Kayıt Ol' : 'Giriş Yap';
+    document.getElementById('authSwitchText').textContent = isRegister
+      ? 'Zaten hesabın var mı?' : 'Hesabın yok mu?';
+    document.getElementById('authError').style.display = 'none';
+    document.getElementById('noticeBox').innerHTML = '';
+  }
 
-    async function loadTodos() {
-      try {
-        todos = await api('GET', '?order=created_at.desc');
-        render();
-      } catch (e) {
-        showError('Veriler yüklenemedi: ' + e.message);
-        document.getElementById('todoList').innerHTML = '<li class="empty">Yüklenemedi</li>';
-      }
-    }
+  function showAuthError(msg) {
+    const el = document.getElementById('authError');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
 
-    async function addTodo() {
-      const input = document.getElementById('todoInput');
-      const text = input.value.trim();
-      if (!text) return;
-      const btn = document.getElementById('addBtn');
-      btn.disabled = true;
-      try {
-        const [created] = await api('POST', '', { text, done: false });
-        todos.unshift(created);
-        input.value = '';
-        render();
-      } catch (e) {
-        showError('Eklenemedi: ' + e.message);
-      } finally {
-        btn.disabled = false;
-      }
-    }
+  async function submitAuth() {
+    const email = document.getElementById('authEmail').value.trim();
+    const password = document.getElementById('authPassword').value;
+    const btn = document.getElementById('authSubmit');
 
-    async function toggleTodo(id) {
-      const todo = todos.find(t => t.id === id);
-      if (!todo) return;
-      const newDone = !todo.done;
-      todo.done = newDone;
-      render();
-      try {
-        await api('PATCH', `?id=eq.${id}`, { done: newDone });
-      } catch (e) {
-        todo.done = !newDone;
-        render();
-        showError('Güncellenemedi: ' + e.message);
-      }
-    }
+    if (!email || !password) { showAuthError('E-posta ve şifre gerekli.'); return; }
 
-    async function deleteTodo(id) {
-      const prev = [...todos];
-      todos = todos.filter(t => t.id !== id);
-      render();
-      try {
-        await api('DELETE', `?id=eq.${id}`);
-      } catch (e) {
-        todos = prev;
-        render();
-        showError('Silinemedi: ' + e.message);
-      }
-    }
+    btn.disabled = true;
+    document.getElementById('authError').style.display = 'none';
 
-    async function clearDone() {
-      const prev = [...todos];
-      todos = todos.filter(t => !t.done);
-      render();
-      try {
-        await api('DELETE', '?done=eq.true');
-      } catch (e) {
-        todos = prev;
-        render();
-        showError('Silinemedi: ' + e.message);
-      }
-    }
-
-    async function saveEdit(id, value) {
-      const text = value.trim();
-      const todo = todos.find(t => t.id === id);
-      if (!todo || !text || text === todo.text) { render(); return; }
-      const oldText = todo.text;
-      todo.text = text;
-      render();
-      try {
-        await api('PATCH', `?id=eq.${id}`, { text });
-      } catch (e) {
-        todo.text = oldText;
-        render();
-        showError('Düzenlenemedi: ' + e.message);
-      }
-    }
-
-    function setFilter(f, btn) {
-      filter = f;
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      render();
-    }
-
-    function render() {
-      const list = document.getElementById('todoList');
-      const filtered = todos.filter(t => {
-        if (filter === 'active') return !t.done;
-        if (filter === 'done') return t.done;
-        return true;
-      });
-
-      if (filtered.length === 0) {
-        list.innerHTML = '<li class="empty">Görev yok</li>';
+    try {
+      if (isRegister) {
+        await supabase('POST', '/auth/v1/signup', {
+          email, password,
+          options: { emailRedirectTo: 'https://muzaffergil.github.io/todo-app/' }
+        });
+        document.getElementById('authForm').style.display = 'none';
+        document.getElementById('authSwitchText').style.display = 'none';
+        document.getElementById('noticeBox').innerHTML = `
+          <div class="notice">
+            <strong>Onay maili gönderildi!</strong><br>
+            <b>${escapeHtml(email)}</b> adresine bir onay maili gönderdik.
+            Maildeki bağlantıya tıklayarak hesabını aktif et.
+          </div>`;
       } else {
-        list.innerHTML = filtered.map(t => `
-          <li class="todo-item ${t.done ? 'done' : ''}">
-            <input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleTodo(${t.id})">
-            <span class="todo-text">${escapeHtml(t.text)}</span>
-            <input class="edit-input" value="${escapeHtml(t.text)}"
-              onkeydown="handleEditKey(event, ${t.id})"
-              onblur="saveEdit(${t.id}, this.value)">
-            <button class="edit-btn" onclick="startEdit(${t.id})" title="Düzenle">✎</button>
-            <button class="delete-btn" onclick="deleteTodo(${t.id})" title="Sil">×</button>
-          </li>
-        `).join('');
+        const data = await supabase('POST', '/auth/v1/token?grant_type=password', { email, password });
+        saveSession(data);
+        showApp(data);
       }
-
-      const remaining = todos.filter(t => !t.done).length;
-      document.getElementById('remaining').textContent = `${remaining} görev kaldı`;
+    } catch (e) {
+      showAuthError(translateError(e.message));
+    } finally {
+      btn.disabled = false;
     }
+  }
 
-    function startEdit(id) {
-      document.querySelectorAll('.todo-item').forEach(el => el.classList.remove('editing'));
-      const btn = [...document.querySelectorAll('.edit-btn')]
-        .find(b => b.getAttribute('onclick') === `startEdit(${id})`);
-      if (!btn) return;
-      const li = btn.closest('.todo-item');
-      li.classList.add('editing');
-      const input = li.querySelector('.edit-input');
-      input.focus();
-      input.setSelectionRange(input.value.length, input.value.length);
-    }
+  function translateError(msg) {
+    if (/invalid login/i.test(msg)) return 'E-posta veya şifre hatalı.';
+    if (/email not confirmed/i.test(msg)) return 'E-posta adresin henüz onaylanmadı. Lütfen mailine bak.';
+    if (/already registered/i.test(msg)) return 'Bu e-posta adresi zaten kayıtlı.';
+    if (/weak password/i.test(msg)) return 'Şifre en az 6 karakter olmalı.';
+    return msg;
+  }
 
-    function handleEditKey(e, id) {
-      if (e.key === 'Enter') saveEdit(id, e.target.value);
-      else if (e.key === 'Escape') render();
-    }
+  async function logout() {
+    try { await supabase('POST', '/auth/v1/logout', {}, session?.access_token); } catch {}
+    saveSession(null);
+    todos = [];
+    document.getElementById('appBox').style.display = 'none';
+    document.getElementById('authBox').style.display = 'block';
+    document.getElementById('authForm').style.display = 'block';
+    document.getElementById('authSwitchText').style.display = 'inline';
+    document.getElementById('noticeBox').innerHTML = '';
+    document.getElementById('authEmail').value = '';
+    document.getElementById('authPassword').value = '';
+    if (isRegister) toggleMode();
+  }
 
-    function escapeHtml(str) {
-      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
-
+  function showApp(s) {
+    document.getElementById('authBox').style.display = 'none';
+    document.getElementById('appBox').style.display = 'block';
+    document.getElementById('userEmail').textContent = s.user?.email || '';
     loadTodos();
-  </script>
+  }
+
+  /* ── handle confirmation redirect (hash tokens) ── */
+  async function handleRedirect() {
+    const hash = window.location.hash;
+    if (!hash) return false;
+    const params = new URLSearchParams(hash.replace(/^#/, ''));
+    const accessToken = params.get('access_token');
+    const refreshToken = params.get('refresh_token');
+    const type = params.get('type');
+    if (!accessToken) return false;
+
+    window.history.replaceState(null, '', window.location.pathname);
+
+    if (type === 'signup' || type === 'recovery' || type === 'magiclink') {
+      const s = { access_token: accessToken, refresh_token: refreshToken, user: null };
+      try {
+        const user = await supabase('GET', '/auth/v1/user', null, accessToken);
+        s.user = user;
+      } catch {}
+      saveSession(s);
+      showApp(s);
+      return true;
+    }
+    return false;
+  }
+
+  /* ── todos API ── */
+  const TODOS_URL = `${SUPABASE_URL}/rest/v1/todos`;
+
+  async function db(method, path = '', body = null) {
+    const res = await fetch(TODOS_URL + path, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': ANON_KEY,
+        'Authorization': `Bearer ${session.access_token}`,
+        'Prefer': 'return=representation'
+      },
+      body: body ? JSON.stringify(body) : null
+    });
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(err);
+    }
+    const text = await res.text();
+    return text ? JSON.parse(text) : null;
+  }
+
+  async function loadTodos() {
+    try {
+      todos = await db('GET', '?order=created_at.desc');
+      render();
+    } catch (e) {
+      showError('Veriler yüklenemedi.');
+      document.getElementById('todoList').innerHTML = '<li class="empty">Yüklenemedi</li>';
+    }
+  }
+
+  async function addTodo() {
+    const input = document.getElementById('todoInput');
+    const text = input.value.trim();
+    if (!text) return;
+    const btn = document.getElementById('addBtn');
+    btn.disabled = true;
+    try {
+      const [created] = await db('POST', '', { text, done: false, user_id: session.user?.id });
+      todos.unshift(created);
+      input.value = '';
+      render();
+    } catch (e) {
+      showError('Eklenemedi.');
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  async function toggleTodo(id) {
+    const todo = todos.find(t => t.id === id);
+    if (!todo) return;
+    const newDone = !todo.done;
+    todo.done = newDone;
+    render();
+    try {
+      await db('PATCH', `?id=eq.${id}`, { done: newDone });
+    } catch {
+      todo.done = !newDone;
+      render();
+      showError('Güncellenemedi.');
+    }
+  }
+
+  async function deleteTodo(id) {
+    const prev = [...todos];
+    todos = todos.filter(t => t.id !== id);
+    render();
+    try {
+      await db('DELETE', `?id=eq.${id}`);
+    } catch {
+      todos = prev;
+      render();
+      showError('Silinemedi.');
+    }
+  }
+
+  async function clearDone() {
+    const prev = [...todos];
+    todos = todos.filter(t => !t.done);
+    render();
+    try {
+      await db('DELETE', '?done=eq.true');
+    } catch {
+      todos = prev;
+      render();
+      showError('Silinemedi.');
+    }
+  }
+
+  async function saveEdit(id, value) {
+    const text = value.trim();
+    const todo = todos.find(t => t.id === id);
+    if (!todo || !text || text === todo.text) { render(); return; }
+    const old = todo.text;
+    todo.text = text;
+    render();
+    try {
+      await db('PATCH', `?id=eq.${id}`, { text });
+    } catch {
+      todo.text = old;
+      render();
+      showError('Düzenlenemedi.');
+    }
+  }
+
+  function showError(msg) {
+    const bar = document.getElementById('errorBar');
+    bar.textContent = msg;
+    bar.style.display = 'block';
+    setTimeout(() => bar.style.display = 'none', 4000);
+  }
+
+  function setFilter(f, btn) {
+    filter = f;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    render();
+  }
+
+  function render() {
+    const list = document.getElementById('todoList');
+    const filtered = todos.filter(t => {
+      if (filter === 'active') return !t.done;
+      if (filter === 'done') return t.done;
+      return true;
+    });
+
+    list.innerHTML = filtered.length === 0
+      ? '<li class="empty">Görev yok</li>'
+      : filtered.map(t => `
+        <li class="todo-item ${t.done ? 'done' : ''}">
+          <input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleTodo(${t.id})">
+          <span class="todo-text">${escapeHtml(t.text)}</span>
+          <input class="edit-input" value="${escapeHtml(t.text)}"
+            onkeydown="handleEditKey(event,${t.id})"
+            onblur="saveEdit(${t.id},this.value)">
+          <button class="edit-btn" onclick="startEdit(${t.id})" title="Düzenle">✎</button>
+          <button class="delete-btn" onclick="deleteTodo(${t.id})" title="Sil">×</button>
+        </li>`).join('');
+
+    const remaining = todos.filter(t => !t.done).length;
+    document.getElementById('remaining').textContent = `${remaining} görev kaldı`;
+  }
+
+  function startEdit(id) {
+    document.querySelectorAll('.todo-item').forEach(el => el.classList.remove('editing'));
+    const btn = [...document.querySelectorAll('.edit-btn')]
+      .find(b => b.getAttribute('onclick') === `startEdit(${id})`);
+    if (!btn) return;
+    const li = btn.closest('.todo-item');
+    li.classList.add('editing');
+    const inp = li.querySelector('.edit-input');
+    inp.focus();
+    inp.setSelectionRange(inp.value.length, inp.value.length);
+  }
+
+  function handleEditKey(e, id) {
+    if (e.key === 'Enter') saveEdit(id, e.target.value);
+    else if (e.key === 'Escape') render();
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  /* ── Enter key on auth form ── */
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && document.getElementById('authBox').style.display !== 'none') {
+      submitAuth();
+    }
+  });
+
+  /* ── Todo input Enter ── */
+  document.getElementById('todoInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addTodo();
+  });
+
+  /* ── boot ── */
+  (async () => {
+    const redirected = await handleRedirect();
+    if (redirected) return;
+    const saved = loadSession();
+    if (saved?.access_token) {
+      try {
+        const user = await supabase('GET', '/auth/v1/user', null, saved.access_token);
+        saved.user = user;
+        saveSession(saved);
+        showApp(saved);
+      } catch {
+        saveSession(null);
+      }
+    }
+  })();
+</script>
 </body>
 </html>
