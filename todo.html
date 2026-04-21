@@ -5,11 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Todo Uygulaması</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -36,16 +32,8 @@
       padding: 24px;
     }
 
-    .header h1 {
-      font-size: 22px;
-      font-weight: 600;
-    }
-
-    .header p {
-      font-size: 13px;
-      opacity: 0.75;
-      margin-top: 4px;
-    }
+    .header h1 { font-size: 22px; font-weight: 600; }
+    .header p { font-size: 13px; opacity: 0.75; margin-top: 4px; }
 
     .input-area {
       display: flex;
@@ -64,9 +52,7 @@
       transition: border-color 0.2s;
     }
 
-    .input-area input:focus {
-      border-color: #4f46e5;
-    }
+    .input-area input:focus { border-color: #4f46e5; }
 
     .input-area button {
       background: #4f46e5;
@@ -81,9 +67,8 @@
       white-space: nowrap;
     }
 
-    .input-area button:hover {
-      background: #4338ca;
-    }
+    .input-area button:hover { background: #4338ca; }
+    .input-area button:disabled { background: #a5b4fc; cursor: not-allowed; }
 
     .filters {
       display: flex;
@@ -109,10 +94,7 @@
       color: #fff;
     }
 
-    .todo-list {
-      list-style: none;
-      min-height: 60px;
-    }
+    .todo-list { list-style: none; min-height: 60px; }
 
     .todo-item {
       display: flex;
@@ -123,9 +105,7 @@
       transition: background 0.15s;
     }
 
-    .todo-item:hover {
-      background: #f9fafb;
-    }
+    .todo-item:hover { background: #f9fafb; }
 
     .todo-item input[type="checkbox"] {
       width: 18px;
@@ -160,13 +140,8 @@
       color: #d1d5db;
     }
 
-    .edit-btn:hover {
-      color: #4f46e5;
-    }
-
-    .delete-btn:hover {
-      color: #ef4444;
-    }
+    .edit-btn:hover { color: #4f46e5; }
+    .delete-btn:hover { color: #ef4444; }
 
     .todo-item.editing .todo-text { display: none; }
     .todo-item:not(.editing) .edit-input { display: none; }
@@ -199,15 +174,28 @@
       text-decoration: underline;
     }
 
-    .clear-btn:hover {
-      color: #ef4444;
-    }
+    .clear-btn:hover { color: #ef4444; }
 
     .empty {
       text-align: center;
       padding: 32px;
       color: #d1d5db;
       font-size: 14px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 32px;
+      color: #9ca3af;
+      font-size: 13px;
+    }
+
+    .error-bar {
+      background: #fef2f2;
+      color: #dc2626;
+      font-size: 12px;
+      padding: 8px 20px;
+      display: none;
     }
   </style>
 </head>
@@ -220,8 +208,10 @@
 
     <div class="input-area">
       <input type="text" id="todoInput" placeholder="Yeni görev ekle..." maxlength="200">
-      <button onclick="addTodo()">Ekle</button>
+      <button id="addBtn" onclick="addTodo()">Ekle</button>
     </div>
+
+    <div class="error-bar" id="errorBar"></div>
 
     <div class="filters">
       <button class="filter-btn active" onclick="setFilter('all', this)">Tümü</button>
@@ -229,7 +219,7 @@
       <button class="filter-btn" onclick="setFilter('done', this)">Tamamlanan</button>
     </div>
 
-    <ul class="todo-list" id="todoList"></ul>
+    <ul class="todo-list" id="todoList"><li class="loading">Yükleniyor...</li></ul>
 
     <div class="footer">
       <span id="remaining"></span>
@@ -238,7 +228,17 @@
   </div>
 
   <script>
-    let todos = JSON.parse(localStorage.getItem('todos') || '[]');
+    const SUPABASE_URL = 'https://ucpnijiudrqzlrsoynem.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVjcG5paml1ZHJxemxyc295bmVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3NjEyNjQsImV4cCI6MjA5MjMzNzI2NH0.MwlCQtLROebBJOySQkQu44PhWfsnDMrn_5TLpSG4UD8';
+    const API = `${SUPABASE_URL}/rest/v1/todos`;
+    const HEADERS = {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      'Prefer': 'return=representation'
+    };
+
+    let todos = [];
     let filter = 'all';
 
     document.getElementById('date').textContent = new Date().toLocaleDateString('tr-TR', {
@@ -249,37 +249,110 @@
       if (e.key === 'Enter') addTodo();
     });
 
-    function save() {
-      localStorage.setItem('todos', JSON.stringify(todos));
+    function showError(msg) {
+      const bar = document.getElementById('errorBar');
+      bar.textContent = msg;
+      bar.style.display = 'block';
+      setTimeout(() => bar.style.display = 'none', 4000);
     }
 
-    function addTodo() {
+    async function api(method, path = '', body = null, extraHeaders = {}) {
+      const res = await fetch(API + path, {
+        method,
+        headers: { ...HEADERS, ...extraHeaders },
+        body: body ? JSON.stringify(body) : null
+      });
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(err);
+      }
+      const text = await res.text();
+      return text ? JSON.parse(text) : null;
+    }
+
+    async function loadTodos() {
+      try {
+        todos = await api('GET', '?order=created_at.desc');
+        render();
+      } catch (e) {
+        showError('Veriler yüklenemedi: ' + e.message);
+        document.getElementById('todoList').innerHTML = '<li class="empty">Yüklenemedi</li>';
+      }
+    }
+
+    async function addTodo() {
       const input = document.getElementById('todoInput');
       const text = input.value.trim();
       if (!text) return;
-      todos.unshift({ id: Date.now(), text, done: false });
-      input.value = '';
-      save();
-      render();
+      const btn = document.getElementById('addBtn');
+      btn.disabled = true;
+      try {
+        const [created] = await api('POST', '', { text, done: false });
+        todos.unshift(created);
+        input.value = '';
+        render();
+      } catch (e) {
+        showError('Eklenemedi: ' + e.message);
+      } finally {
+        btn.disabled = false;
+      }
     }
 
-    function toggleTodo(id) {
+    async function toggleTodo(id) {
       const todo = todos.find(t => t.id === id);
-      if (todo) todo.done = !todo.done;
-      save();
+      if (!todo) return;
+      const newDone = !todo.done;
+      todo.done = newDone;
       render();
+      try {
+        await api('PATCH', `?id=eq.${id}`, { done: newDone });
+      } catch (e) {
+        todo.done = !newDone;
+        render();
+        showError('Güncellenemedi: ' + e.message);
+      }
     }
 
-    function deleteTodo(id) {
+    async function deleteTodo(id) {
+      const prev = [...todos];
       todos = todos.filter(t => t.id !== id);
-      save();
       render();
+      try {
+        await api('DELETE', `?id=eq.${id}`);
+      } catch (e) {
+        todos = prev;
+        render();
+        showError('Silinemedi: ' + e.message);
+      }
     }
 
-    function clearDone() {
+    async function clearDone() {
+      const prev = [...todos];
       todos = todos.filter(t => !t.done);
-      save();
       render();
+      try {
+        await api('DELETE', '?done=eq.true');
+      } catch (e) {
+        todos = prev;
+        render();
+        showError('Silinemedi: ' + e.message);
+      }
+    }
+
+    async function saveEdit(id, value) {
+      const text = value.trim();
+      const todo = todos.find(t => t.id === id);
+      if (!todo || !text || text === todo.text) { render(); return; }
+      const oldText = todo.text;
+      todo.text = text;
+      render();
+      try {
+        await api('PATCH', `?id=eq.${id}`, { text });
+      } catch (e) {
+        todo.text = oldText;
+        render();
+        showError('Düzenlenemedi: ' + e.message);
+      }
     }
 
     function setFilter(f, btn) {
@@ -318,9 +391,7 @@
     }
 
     function startEdit(id) {
-      const items = document.querySelectorAll('.todo-item');
-      items.forEach(item => item.classList.remove('editing'));
-      // find the rendered li by matching the edit-btn's onclick
+      document.querySelectorAll('.todo-item').forEach(el => el.classList.remove('editing'));
       const btn = [...document.querySelectorAll('.edit-btn')]
         .find(b => b.getAttribute('onclick') === `startEdit(${id})`);
       if (!btn) return;
@@ -331,29 +402,16 @@
       input.setSelectionRange(input.value.length, input.value.length);
     }
 
-    function saveEdit(id, value) {
-      const text = value.trim();
-      const todo = todos.find(t => t.id === id);
-      if (todo && text && text !== todo.text) {
-        todo.text = text;
-        save();
-      }
-      render();
-    }
-
     function handleEditKey(e, id) {
-      if (e.key === 'Enter') {
-        saveEdit(id, e.target.value);
-      } else if (e.key === 'Escape') {
-        render();
-      }
+      if (e.key === 'Enter') saveEdit(id, e.target.value);
+      else if (e.key === 'Escape') render();
     }
 
     function escapeHtml(str) {
       return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
-    render();
+    loadTodos();
   </script>
 </body>
 </html>
